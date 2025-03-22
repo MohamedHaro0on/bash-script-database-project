@@ -1,0 +1,33 @@
+📁 BashDBMS/
+│── 📁 databases/         # All databases (each database is a directory)
+│── 📁 scripts/           # All shell scripts (modular approach)
+│   │── 📜 main.sh        # Main script to run the DBMS menu
+│   │── 📜 db_manager.sh  # Handles database operations (create, list, connect, drop)
+│   │── 📜 table_manager.sh # Handles table operations (create, list, drop)
+│   │── 📜 insert.sh      # Handles inserting data into tables
+│   │── 📜 select.sh      # Handles selecting data from tables
+│   │── 📜 update.sh      # Handles updating records in tables
+│   │── 📜 delete.sh      # Handles deleting records from tables
+│── 📁 logs/              # Store error or action logs (optional)
+│── 📜 README.md          # Documentation and usage instructions
+----------------------------------------------------------------------------------------
+databases/
+├── my_database/
+    ├── users.tbl   # Table data (each table is a file)
+    ├── users.meta  # Table schema (columns, types, primary key)
+
+Example users.meta file:
+------------------------
+id:int:PK
+name:string
+age:int
+---------------------------------------------------------------------
+3️⃣ Scripts & Responsibilities
+*****************************
+main.sh	Displays ==>    the main menu and routes user input
+db_manager.sh    ==>	Manages databases (create, list, connect, drop)
+table_manager.sh ==>	Manages tables (create, list, drop)
+insert.sh	     ==>    Validates and inserts new records into tables
+select.sh	     ==>    Displays table data in a formatted way
+update.sh        ==>	Modifies existing records based on conditions
+delete.sh        ==>	Deletes records based on conditions

@@ -1,0 +1,106 @@
+#! /usr/bin/bash
+
+source ./table_menu
+
+DB_PATH="../databases"
+
+#Ensure database directory exists
+mkdir -p "$DB_PATH"
+
+create_database(){
+read -p "Enter Database Name: " db_name
+
+if [[ -z "$db_name" ]]
+then
+	echo "Database Name Cannot Be Empty."
+    return
+fi
+if [[ -d "$DB_PATH/$db_name" ]]
+then
+	echo "Database $db_name Alreday Exists."
+else
+	mkdir "$DB_PATH/$db_name"
+	echo "Database $db_name Created Successfully."
+fi		
+}
+list_databases(){
+if [[ -z "$(ls -A "$DB_PATH")" ]]
+then
+	echo "No Databases Found"
+else
+	echo "Available Databases: "
+	ls -l "$DB_PATH"
+fi	
+}
+drop_database(){
+read -p "Enter Database Name To Drop: " db_name
+if [[ -z "$db_name" ]]
+then
+	echo "Database Name Cannot Be Empty."
+        return
+fi
+if [[ -d "$DB_PATH/$db_name" ]]
+then
+	read -p "Are You Sure You Want To Delete $db_name? (y/n): " confirm
+	if [[ "$confirm" == "y" ]]
+	then
+		rm -r "$DB_PATH/$db_name"
+		echo "Database $db_name Deleted."
+	else
+		echo "Deletion Cancelled."
+	fi
+else
+	echo "Database $db_name Does Not Exist."
+fi		
+}
+
+rename_database(){
+read -p "Enter Database Name To Rename: " old_name
+if [[ -z "$old_name" ]]
+then
+	echo "Database Name Cannot Be Empty."
+        return
+fi
+if [[ ! -d "$DB_PATH/$old_name" ]]
+then
+	echo "Database $old_name Does Not Exist."
+	return
+fi
+
+read -p "Enter the New Name for the Database: " new_name
+
+if [[ -z "$new_name" ]]
+then
+	echo "Database Name Cannot Be Empty."
+        return
+fi
+
+if [[ -d "$DB_PATH/$new_name" ]]
+then
+	echo "Database $new_name Already Exist. Choose A Different Name."
+	return
+fi
+
+mv "$DB_PATH/$old_name" "$DB_PATH/$new_name"
+echo "Database $old_name has been renamed to $new_old ."
+}
+
+connect_database(){
+read -p "Enter Database Name To Drop: " db_name
+if [[ -z "$db_name" ]]
+then
+	echo "Database Name Cannot Be Empty."
+        return
+fi
+if [[ -d "$DB_PATH/$db_name" ]]
+then
+	cd "$DB_PATH/$db_name" || { echo "Failed To Connect To $db_name"; return; }
+	echo "Connecting To Database: $db_name"
+	
+	# Call the table menu function after successful connection
+        table_menu "$db_name"
+	# Return to the main script directory after exiting the table menu
+else
+	echo "Database $db_name Does Not Exist."
+fi
+}

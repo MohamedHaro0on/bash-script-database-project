@@ -1,0 +1,39 @@
+#! /usr/bin/bash
+
+source ./table_management
+
+table_menu(){
+echo "Connected To Database: $1"
+DB_NAME=$1
+    while true; 
+    do
+        echo -e "\nTable Operations Menu:"
+        echo "1) Create Table"
+        echo "2) List Tables"
+        echo "3) Drop Table"
+        echo "4) Rename Table"
+        echo "5) Insert Into Table"
+        echo "6) Select from Table"
+        echo "7) Delete from Table"
+        echo "8) Update Table"
+        echo "9) Disconnect from Database"
+
+        read -p "Select an Option: " option
+        case $option in
+            1) create_table "$DB_NAME" ;;
+            2) list_tables "$DB_NAME" ;;
+            3) drop_table "$DB_NAME" ;;
+            4) rename_table "$DB_NAME" ;;
+            5) insert_into_table "$DB_NAME" ;;
+            6) select_from_table "$DB_NAME" ;;
+            7) delete_from "$DB_NAME" ;;
+            8) update_table "$DB_NAME" ;;
+            9) 
+                echo "Disconnected from Database: $DB_NAME"
+                break 
+                ;;
+            *) echo "Invalid Option, Please Try Again." ;;
+        esac
+    done
+
+}
