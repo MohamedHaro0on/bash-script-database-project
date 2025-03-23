@@ -1,0 +1,204 @@
+#!/usr/bin/bash
+
+source ../configs/config
+
+# Database Operations Utils
+check_db_name() {
+    local name=$1
+    if [[ -z "$name" ]]; then
+        echo "Database name cannot be empty."
+        return 1
+    fi
+    if [[ ! "$name" =~ ${REGEX_PATTERNS["DB_NAME_REGEX"]} ]]; then
+        echo "Invalid database name. Must start with a letter and contain only letters, numbers, and underscores."
+        return 1
+    fi
+    return 0
+}
+
+ensure_db_path() {
+    mkdir -p "$DB_PATH"
+}
+
+list_all_databases() {
+    if [[ -z "$(ls -A "$DB_PATH")" ]]; then
+        echo "No databases found"
+        return 1
+    fi
+    echo -e "\nAvailable Databases:"
+    echo "==================="
+    ls -l "$DB_PATH" | grep "^d" | awk '{print NR ") " $9}'
+    return 0
+}
+
+# Database and Table existence checks
+check_db_exists() {
+    echo "Checking database: $DB_NAME" # Debugging
+    echo "Checking database path: $DB_PATH" # Debugging
+    if [ ! -d "$DB_PATH/" ]; then
+        echo "Database '$DB_NAME' does not exist!"
+        return 1
+    fi
+    return 0
+}
+
+check_table_exists() {
+    TABLE_NAME=$1
+    if [ ! -d "$DB_PATH//$TABLE_NAME" ]; then
+        # echo "Table '$TABLE_NAME' does not exist!"
+        return 1
+    fi
+    return 0
+}
+
+# Table Operations Utils
+get_tables() {
+    declare -a table_names 
+    number=1
+    for table in "$DB_PATH/"/*/ ; do
+        if [ -d "$table" ]; then
+            table_name=$(basename "$table")
+            table_names[$number]=$table_name
+            echo "$number) $table_name"
+            ((number++))
+        fi
+    done
+    return $((number-1))  # Return table count
+}
+
+display_tables() {
+    echo -e "\nAvailable tables:"
+    echo "=============================================="
+    get_tables
+    table_count=$?
+    
+    if [ $table_count -eq 0 ]; then
+        echo "No tables found in database '$DB_NAME'"
+        return 1
+    fi
+    return 0
+}
+
+get_table_record_count() {
+    local table_name=$1
+    if [ -f "$DB_PATH//$table_name/data" ]; then
+        wc -l < "$DB_PATH//$table_name/data" 2>/dev/null || echo 0
+        return 0
+    fi
+    echo 0
+    return 1
+}
+
+# Data type regex patterns
+REGEX_PATTERNS=(
+    ["string"]="^[a-zA-Z0-9\.\ \-\_\,\']+$"
+    ["integer"]="^[\-]?[0-9]+$"
+    ["float"]="^[\-]?[0-9]+\.?[0-9]*$"
+    ["date"]="^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$"
+    ["DB_NAME_REGEX"]="^[a-zA-Z][a-zA-Z0-9_]*$"
+    ["TABLE_NAME_REGEX"]="^[a-zA-Z][a-zA-Z0-9_]*$"
+    ["COLUMN_NAME_REGEX"]="^[a-zA-Z][a-zA-Z0-9_]*$"
+)
+
+# Data type validation function
+validate_data_type() {
+    value=$1
+    type=$2
+    
+    case $type in
+        "string")
+            if [[ "$value" =~ ${REGEX_PATTERNS["string"]} ]]; then
+                return 0
+            fi
+            echo "Invalid string format. Use only letters, numbers, spaces, and basic punctuation"
+            ;;
+            
+        "integer")
+            if [[ "$value" =~ ${REGEX_PATTERNS["integer"]} ]]; then
+                return 0
+            fi
+            echo "Invalid integer format. Enter a whole number"
+            ;;
+            
+        "float")
+            if [[ "$value" =~ ${REGEX_PATTERNS["float"]} ]]; then
+                return 0
+            fi
+            echo "Invalid float format. Enter a number (decimal point optional)"
+            ;;
+            
+        "date")
+            if [[ "$value" =~ ${REGEX_PATTERNS["date"]} ]]; then
+                # Additional date validation
+                year=${value:0:4}
+                month=${value:5:2}
+                day=${value:8:2}
+                
+                if [ "$month" -ge 1 ] && [ "$month" -le 12 ] && \
+                   [ "$day" -ge 1 ] && [ "$day" -le 31 ]; then
+                    return 0
+                fi
+                echo "Invalid date values. Use valid month (1-12) and day (1-31)"
+            else
+                echo "Invalid date format. Use YYYY-MM-DD"
+            fi
+            ;;
+            
+        *)
+            echo "Unknown data type: $type"
+            ;;
+    esac
+    return 1
+}
+
+# Name validation functions
+validate_table_name() {
+    local name=$1
+    if [[ -z "$name" ]]; then
+        echo "Table name cannot be empty."
+        return 1
+    fi
+    if [[ ! "$name" =~ ${REGEX_PATTERNS["TABLE_NAME_REGEX"]} ]]; then
+        echo "Invalid table name. Must start with a letter and contain only letters, numbers, and underscores."
+        return 1
+    fi
+    return 0
+}
+
+validate_column_name() {
+    local name=$1
+    if [[ -z "$name" ]]; then
+        echo "Column name cannot be empty."
+        return 1
+    fi
+    if [[ ! "$name" =~ ${REGEX_PATTERNS["COLUMN_NAME_REGEX"]} ]]; then
+        echo "Invalid column name. Must start with a letter and contain only letters, numbers, and underscores."
+        return 1
+    fi
+    return 0
+}
+
+# Input validation utils
+validate_number() {
+    local num=$1
+    local min=$2
+    local max=$3
+    if [[ ! "$num" =~ ^[0-9]+$ ]] || [ "$num" -lt "$min" ] || [ "$num" -gt "$max" ]; then
+        echo "Please enter a number between $min and $max"
+        return 1
+    fi
+    return 0
+}
+
+# Confirmation util
+confirm_action() {
+    local message=$1
+    read -p "$message (y/n): " confirm
+    if [[ "$confirm" == [yY] ]]; then
+        return 0
+    fi
+    echo "Operation cancelled."
+    return 1
+}
+# Supported data types array
+SUPPORTED_DATATYPES=("string" "integer" "float" "date")

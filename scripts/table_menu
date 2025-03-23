@@ -1,10 +1,11 @@
 #! /usr/bin/bash
 
 source ./table_management
+source ../configs/config
+source ./utils
 
 table_menu(){
-echo "Connected To Database: $1"
-DB_NAME=$1
+echo "Connected To Database: $DB_NAME"
     while true; 
     do
         echo -e "\nTable Operations Menu:"
@@ -30,14 +31,14 @@ DB_NAME=$1
         done
                         
         case $option in
-            1) create_table "$DB_NAME" ;;
-            2) list_tables "$DB_NAME" ;;
-            3) drop_table "$DB_NAME" ;;
-            4) rename_table "$DB_NAME" ;;
-            5) insert_into_table "$DB_NAME" ;;
-            6) select_from_table "$DB_NAME" ;;
-            7) delete_from "$DB_NAME" ;;
-            8) update_table "$DB_NAME" ;;
+            1) create_table ;;
+            2) list_tables ;;
+            3) drop_table ;;
+            4) rename_table ;;
+            5) insert_into_table ;;
+            6) select_from_table ;;
+            7) delete_from ;;
+            8) update_table ;;
             9) 
                 echo "Disconnected from Database: $DB_NAME"
                 break 

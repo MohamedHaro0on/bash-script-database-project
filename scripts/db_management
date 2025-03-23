@@ -1,108 +1,183 @@
-#! /usr/bin/bash
+#!/usr/bin/bash
 
+source ../configs/config
+source ./utils
 source ./table_menu
 
-DB_PATH="../databases"
+# Ensure database directory exists
+ensure_db_path
 
-#Ensure database directory exists
-mkdir -p "$DB_PATH"
-
-create_database(){
-read -p "Enter Database Name: " db_name
-
-if [[ -z "$db_name" ]]
-then
-	echo "Database Name Cannot Be Empty."
-    return
-fi
-if [[ -d "$DB_PATH/$db_name" ]]
-then
-	echo "Database $db_name Alreday Exists."
-else
-	mkdir "$DB_PATH/$db_name"
-	echo "Database $db_name Created Successfully."
-	table_menu "$DB_PATH/$db_name"
-
-fi		
-}
-list_databases(){
-if [[ -z "$(ls -A "$DB_PATH")" ]]
-then
-	echo "No Databases Found"
-else
-	echo "Available Databases: "
-	ls -l "$DB_PATH"
-fi	
-}
-drop_database(){
-read -p "Enter Database Name To Drop: " db_name
-if [[ -z "$db_name" ]]
-then
-	echo "Database Name Cannot Be Empty."
-        return
-fi
-if [[ -d "$DB_PATH/$db_name" ]]
-then
-	read -p "Are You Sure You Want To Delete $db_name? (y/n): " confirm
-	if [[ "$confirm" == "y" ]]
-	then
-		rm -r "$DB_PATH/$db_name"
-		echo "Database $db_name Deleted."
-	else
-		echo "Deletion Cancelled."
-	fi
-else
-	echo "Database $db_name Does Not Exist."
-fi		
+create_database() {
+    echo -e "\nCreate Database"
+    echo "============================================== "
+    
+    read -p "Enter Database Name: " db_name
+    
+    # Validate database name
+    check_db_name "$db_name" || return 1
+    
+    # Check if database already exists
+    if [[ -d "$DB_PATH/$db_name" ]]; then
+        echo "Error: Database '$db_name' already exists."
+        return 1
+    fi
+    
+    # Create database directory
+    if mkdir "$DB_PATH/$db_name" 2>/dev/null; then
+        echo "Database '$db_name' created successfully."
+        
+        # Ask if user wants to connect to the new database
+        if confirm_action "Would you like to connect to the new database?"; then
+            export DB_PATH="$DB_PATH/$db_name"
+            export DB_NAME="$db_name"
+			echo "Connected to database: $DB_NAME"
+            table_menu
+        fi
+    else
+        echo "Error: Failed to create database '$db_name'"
+        return 1
+    fi
 }
 
-rename_database(){
-read -p "Enter Database Name To Rename: " old_name
-if [[ -z "$old_name" ]]
-then
-	echo "Database Name Cannot Be Empty."
-        return
-fi
-if [[ ! -d "$DB_PATH/$old_name" ]]
-then
-	echo "Database $old_name Does Not Exist."
-	return
-fi
-
-read -p "Enter the New Name for the Database: " new_name
-
-if [[ -z "$new_name" ]]
-then
-	echo "Database Name Cannot Be Empty."
-        return
-fi
-
-if [[ -d "$DB_PATH/$new_name" ]]
-then
-	echo "Database $new_name Already Exist. Choose A Different Name."
-	return
-fi
-
-mv "$DB_PATH/$old_name" "$DB_PATH/$new_name"
-echo "Database $old_name has been renamed to $new_old ."
+list_databases() {
+    echo -e "\nList Databases"
+    echo "============================================== "
+    
+    if ! list_all_databases; then
+        echo "No databases found in $DB_PATH"
+        return 1
+    fi
+    
+    # Display total count
+    local count=$(ls -l "$DB_PATH" | grep "^d" | wc -l)
+    echo -e "\nTotal databases: $count"
 }
 
-connect_database(){
-read -p "Enter Database Name To Drop: " db_name
-if [[ -z "$db_name" ]]
-then
-	echo "Database Name Cannot Be Empty."
-        return
-fi
-if [[ -d "$DB_PATH/$db_name" ]]
-then
-	cd "$DB_PATH/$db_name" || { echo "Failed To Connect To $db_name"; return; }
-	echo "Connecting To Database: $db_name"
-	
-	# Call the table menu function after successful connection
-        table_menu "$db_name"
-	# Return to the main script directory after exiting the table menu
-else
-	echo "Database $db_name Does Not Exist."
-fi
+drop_database() {
+    echo -e "\nDrop Database"
+    echo "============="
+    
+    # List available databases
+    if ! list_all_databases; then
+        return 1
+    fi
+    
+    # Get database selection
+    read -p $'\nEnter database number to drop (or 0 to cancel): ' choice
+    
+    # Check if user wants to cancel
+    if [ "$choice" -eq 0 ]; then
+        echo "Operation cancelled"
+        return 0
+    fi
+    
+    # Get database count
+    local db_count=$(ls -l "$DB_PATH" | grep "^d" | wc -l)
+    
+    # Validate choice
+    if ! validate_number "$choice" 1 "$db_count"; then
+        return 1
+    fi
+    
+    # Get database name from choice
+    local db_name=$(ls -l "$DB_PATH" | grep "^d" | awk '{print $9}' | sed -n "${choice}p")
+    
+    # Confirm deletion
+    if ! confirm_action "Are you sure you want to drop database '$db_name'?"; then
+        return 1
+    fi
+    
+    # Remove database
+    if rm -r "$DB_PATH/$db_name" 2>/dev/null; then
+        echo "Database '$db_name' dropped successfully"
+        
+        # Clear global variable if it was the current database
+        if [[ "$DB_NAME" == "$DB_PATH/$db_name" ]]; then
+            export DB_NAME=""
+        fi
+    else
+        echo "Error: Failed to drop database '$db_name'"
+        return 1
+    fi
+}
+
+rename_database() {
+    echo -e "\nRename Database"
+    echo "============================================== "
+    
+    # List available databases
+    if ! list_all_databases; then
+        return 1
+    fi
+    
+    # Get database selection
+    read -p $'\nEnter database number to rename (or 0 to cancel): ' choice
+    
+    # Check if user wants to cancel
+    if [ "$choice" -eq 0 ]; then
+        echo "Operation cancelled"
+        return 0
+    fi
+    
+    # Get database count
+    local db_count=$(ls -l "$DB_PATH" | grep "^d" | wc -l)
+    
+    # Validate choice
+    if ! validate_number "$choice" 1 "$db_count"; then
+        return 1
+    fi
+    
+    # Get old database name from choice
+    local old_name=$(ls -l "$DB_PATH" | grep "^d" | awk '{print $9}' | sed -n "${choice}p")
+    
+    # Get new name    echo "=================="
+
+    # Rename database
+    if mv "$DB_PATH/$old_name" "$DB_PATH/$new_name" 2>/dev/null; then
+        echo "Database renamed successfully"
+        echo "'$old_name' → '$new_name'"
+        
+        # Update global variable if it was the current database
+        if [[ "$DB_NAME" == "$DB_PATH/$old_name" ]]; then
+            export DB_NAME="$DB_PATH/$new_name"
+        fi
+    else
+        echo "Error: Failed to rename database"
+        return 1
+    fi
+}
+
+connect_database() {
+    echo -e "\nConnect to Database"
+    echo "============================================== "
+    
+    # List available databases
+    if ! list_all_databases; then
+        return 1
+    fi
+    
+    # Get database selection
+    read -p $'\nEnter database number to connect (or 0 to cancel): ' choice
+    
+    # Check if user wants to cancel
+    if [ "$choice" -eq 0 ]; then
+        echo "Operation cancelled"
+        return 0
+    fi
+    
+    # Get database count
+    local db_count=$(ls -l "$DB_PATH" | grep "^d" | wc -l)
+    
+    # Validate choice
+    if ! validate_number "$choice" 1 "$db_count"; then
+        return 1
+    fi
+    
+    # Get database name from choice
+    local db_name=$(ls -l "$DB_PATH" | grep "^d" | awk '{print $9}' | sed -n "${choice}p")
+    
+    # Set global variable and connect
+    export DB_NAME="$DB_PATH/$db_name"
+    echo "Connected to database: $DB_NAME"
+    table_menu
 }

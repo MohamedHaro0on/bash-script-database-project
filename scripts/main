@@ -2,6 +2,9 @@
 
 source ./db_management
 source ./table_menu
+source ./utils
+source ../configs/config
+
 
 PS3="Please, Select An Option: "
 
