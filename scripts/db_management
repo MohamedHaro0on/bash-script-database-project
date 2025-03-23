@@ -21,6 +21,8 @@ then
 else
 	mkdir "$DB_PATH/$db_name"
 	echo "Database $db_name Created Successfully."
+	table_menu "$DB_PATH/$db_name"
+
 fi		
 }
 list_databases(){

@@ -1,6 +1,7 @@
 #! /usr/bin/bash
 
 source ./db_management
+source ./table_menu
 
 PS3="Please, Select An Option: "
 

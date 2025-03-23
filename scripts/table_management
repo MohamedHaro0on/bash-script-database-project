@@ -1,1 +1,292 @@
 #! /usr/bin/bash
+
+
+create_table() {
+    # full path of the database ; $1 is the database name
+    DB_NAME=$1
+    
+    # Prompt for table name
+    read -p "Enter table name: " table_name
+    
+    # Check if table already exists
+    if [ -d "$DB_NAME/$table_name" ]; then
+        echo "Table already exists!"
+        return 1
+    fi
+    
+    # Create table directory
+    mkdir "$DB_NAME/$table_name"
+    
+    # Initialize metadata and data files
+    touch "$DB_NAME/$table_name/metadata"
+    touch "$DB_NAME/$table_name/data"
+    
+    # Array of supported data types
+    declare -a datatypes=("string" "integer" "float" "date")
+    
+    # Prompt for number of columns
+    read -p "Enter number of columns: " col_count
+    
+    # Temporary variable to store metadata
+    metadata=""
+    
+    # Get column details
+    for ((i=1; i<=$col_count; i++))
+    do
+        # Get column name
+        read -p "Enter name for column $i: " col_name
+        
+        # Display available data types
+        echo "Available data types:"
+        for ((j=0; j<${#datatypes[@]}; j++))
+        do
+            echo "$((j+1))) ${datatypes[j]}"
+        done
+        
+        # Get data type
+        while true
+        do
+            read -p "Select data type for $col_name (1-${#datatypes[@]}): " type_choice
+            
+            # Validate input
+            if [[ "$type_choice" =~ ^[1-${#datatypes[@]}]$ ]]; then
+                selected_type=${datatypes[$((type_choice-1))]}
+                break
+            else
+                echo "Invalid choice. Please select a number between 1 and ${#datatypes[@]}"
+            fi
+        done
+        
+        # Append to metadata string
+        if [ $i -eq $col_count ]; then
+            metadata+="$col_name:$selected_type"
+        else
+            metadata+="$col_name:$selected_type,"
+        fi
+    done
+    
+    # Save metadata to file
+    echo "$metadata" > "$DB_NAME/$table_name/metadata"
+    
+    echo "Table '$table_name' created successfully!"
+}
+
+
+
+list_tables() {
+    DB_NAME=$1
+    
+    # Check if database exists
+    if [ ! -d "$DB_NAME" ]; then
+        echo "Database '$DB_NAME' does not exist!"
+        return 1
+    fi
+    
+    # Count number of tables (directories) in the database
+    table_count=$(ls -l "$DB_NAME" | grep ^d | wc -l)
+    
+    if [ $table_count -eq 0 ]; then
+        echo "No tables found in database '$DB_NAME'"
+        return 0
+    fi
+    
+    echo -e "\nTables in database '$DB_NAME':"
+    echo "================================="
+    
+    # Loop through each table (directory)
+    for table in "$DB_NAME"/*/ ; do
+        if [ -d "$table" ]; then
+            # Extract table name from path
+            table_name=$(basename "$table")
+            
+            # Read metadata file to get column information
+            if [ -f "$table/metadata" ]; then
+                metadata=$(cat "$table/metadata")
+                
+                # Count number of records in data file
+                records_count=0
+                if [ -f "$table/data" ]; then
+                    records_count=$(wc -l < "$table/data")
+                fi
+                
+                echo -e "\nTable: $table_name"
+                echo "Records: $records_count"
+                echo "Columns:"
+                
+                # Display column information
+                IFS=',' read -ra COLUMNS <<< "$metadata"
+                for column in "${COLUMNS[@]}"; do
+                    IFS=':' read -ra COL_INFO <<< "$column"
+                    printf "  %-20s %-10s\n" "${COL_INFO[0]}" "${COL_INFO[1]}"
+                done
+                echo "------------------------"
+            else
+                echo "Table '$table_name' (metadata not found)"
+            fi
+        fi
+    done
+}
+
+
+
+
+
+drop_table() {
+    DB_NAME=$1
+    
+    # Check if database exists
+    if [ ! -d "$DB_NAME" ]; then
+        echo "Database '$DB_NAME' does not exist!"
+        return 1
+    fi
+    
+    # Count number of tables
+    table_count=$(ls -l "$DB_NAME" | grep ^d | wc -l)
+    
+    if [ $table_count -eq 0 ]; then
+        echo "No tables found in database '$DB_NAME'"
+        return 1
+    fi
+    
+    # Display available tables
+    echo -e "\nAvailable tables:"
+    echo "=================="
+    number=1
+    declare -a table_names
+    
+    for table in "$DB_NAME"/*/ ; do
+        if [ -d "$table" ]; then
+            table_name=$(basename "$table")
+            table_names[$number]=$table_name
+            echo "$number) $table_name"
+            ((number++))
+        fi
+    done
+    
+    # Prompt user to select table
+    while true; do
+        read -p $'\nEnter table number to drop (or 0 to cancel): ' choice
+        
+        # Check if user wants to cancel
+        if [ "$choice" -eq 0 ]; then
+            echo "Operation cancelled"
+            return 0
+        fi
+        
+        # Validate input
+        if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -gt 0 ] && [ "$choice" -lt "$number" ]; then
+            selected_table=${table_names[$choice]}
+            break
+        else
+            echo "Invalid choice. Please select a number between 0 and $((number-1))"
+        fi
+    done
+    
+    # Confirm deletion
+    read -p "Are you sure you want to drop table '$selected_table'? (y/n): " confirm
+    
+    if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+        # Remove the table directory and its contents
+        rm -r "$DB_NAME/$selected_table"
+        
+        if [ $? -eq 0 ]; then
+            echo "Table '$selected_table' dropped successfully"
+        else
+            echo "Error dropping table '$selected_table'"
+        fi
+    else
+        echo "Operation cancelled"
+    fi
+}
+
+
+
+rename_table() {
+    DB_NAME=$1
+    
+    # Check if database exists
+    if [ ! -d "$DB_NAME" ]; then
+        echo "Database '$DB_NAME' does not exist!"
+        return 1
+    fi
+    
+    # Count number of tables
+    table_count=$(ls -l "$DB_NAME" | grep ^d | wc -l)
+    
+    if [ $table_count -eq 0 ]; then
+        echo "No tables found in database '$DB_NAME'"
+        return 1
+    fi
+    
+    # Display available tables
+    echo -e "\nAvailable tables:"
+    echo "=================="
+    number=1
+    declare -a table_names
+    
+    for table in "$DB_NAME"/*/ ; do
+        if [ -d "$table" ]; then
+            table_name=$(basename "$table")
+            table_names[$number]=$table_name
+            echo "$number) $table_name"
+            ((number++))
+        fi
+    done
+    
+    # Prompt user to select table
+    while true; do
+        read -p $'\nEnter table number to rename (or 0 to cancel): ' choice
+        
+        # Check if user wants to cancel
+        if [ "$choice" -eq 0 ]; then
+            echo "Operation cancelled"
+            return 0
+        fi
+        
+        # Validate input
+        if [[ "$choice" =~ ^[0-9]+$ ]] && [ "$choice" -gt 0 ] && [ "$choice" -lt "$number" ]; then
+            selected_table=${table_names[$choice]}
+            break
+        else
+            echo "Invalid choice. Please select a number between 0 and $((number-1))"
+        fi
+    done
+    
+    # Get new table name
+    while true; do
+        read -p "Enter new table name: " new_table_name
+        
+        # Validate new table name
+        if [[ ! "$new_table_name" =~ ^[a-zA-Z][a-zA-Z0-9_]*$ ]]; then
+            echo "Invalid table name. Table name must:"
+            echo "- Start with a letter"
+            echo "- Contain only letters, numbers, and underscores"
+            continue
+        fi
+        
+        # Check if new name already exists
+        if [ -d "$DB_NAME/$new_table_name" ]; then
+            echo "Table '$new_table_name' already exists. Please choose a different name."
+            continue
+        fi
+        
+        break
+    done
+    
+    # Confirm rename
+    read -p "Rename table '$selected_table' to '$new_table_name'? (y/n): " confirm
+    
+    if [ "$confirm" = "y" ] || [ "$confirm" = "Y" ]; then
+        # Rename the table directory
+        mv "$DB_NAME/$selected_table" "$DB_NAME/$new_table_name"
+        
+        if [ $? -eq 0 ]; then
+            echo "Table renamed successfully"
+            echo "'$selected_table' → '$new_table_name'"
+        else
+            echo "Error renaming table '$selected_table'"
+        fi
+    else
+        echo "Operation cancelled"
+    fi
+}
