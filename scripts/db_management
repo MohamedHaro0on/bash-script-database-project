@@ -177,7 +177,7 @@ connect_database() {
     local db_name=$(ls -l "$DBS_PATH" | grep "^d" | awk '{print $9}' | sed -n "${choice}p")
     
     # Set global variable and connect
-    export DB_NAME="$DBS_PATH/$db_name"
+    export ACTIVE_DB_PATH="$DBS_PATH/$db_name"
     echo "Connected to database: $DB_NAME"
     table_menu
 }
