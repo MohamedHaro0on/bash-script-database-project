@@ -24,12 +24,12 @@ create_table() {
     done
     
     # Create table structure
-    if ! mkdir "$DB_PATH/$table_name" 2>/dev/null; then
+    if ! mkdir "$ACTIVE_DB_PATH/$table_name" 2>/dev/null; then
         echo "Error: Failed to create table directory"
         return 1
     fi
-    touch "$DB_PATH/$table_name/metadata"
-    touch "$DB_PATH/$table_name/data"
+    touch "$ACTIVE_DB_PATH/$table_name/metadata"
+    touch "$ACTIVE_DB_PATH/$table_name/data"
     
     # Get column count
     while true; do
@@ -74,7 +74,7 @@ create_table() {
     done
     
     # Save metadata
-    echo "$metadata" > "$DB_PATH/$table_name/metadata"
+    echo "$metadata" > "$ACTIVE_DB_PATH/$table_name/metadata"
     echo "Table '$table_name' created successfully!"
 }
 
@@ -87,7 +87,7 @@ list_tables() {
     
     # Display tables
     local table_count=0
-    for table in "$DB_PATH"/*/ ; do
+    for table in "$ACTIVE_DB_PATH"/*/ ; do
         if [ -d "$table" ]; then
             ((table_count++))
             table_name=$(basename "$table")
@@ -145,7 +145,7 @@ drop_table() {
     
     # Confirm and execute
     if confirm_action "Are you sure you want to drop table '$selected_table'?"; then
-        if rm -r "$DB_PATH/$selected_table" 2>/dev/null; then
+        if rm -r "$ACTIVE_DB_PATH/$selected_table" 2>/dev/null; then
             echo "Table '$selected_table' dropped successfully"
         else
             echo "Error dropping table '$selected_table'"
@@ -192,7 +192,7 @@ rename_table() {
     
     # Confirm and execute
     if confirm_action "Rename table '$selected_table' to '$new_table_name'?"; then
-        if mv "$DB_PATH/$selected_table" "$DB_PATH/$new_table_name" 2>/dev/null; then
+        if mv "$ACTIVE_DB_PATH/$selected_table" "$ACTIVE_DB_PATH/$new_table_name" 2>/dev/null; then
             echo "Table renamed successfully"
             echo "'$selected_table' → '$new_table_name'"
         else
@@ -226,7 +226,7 @@ insert_into_table() {
     done
     
     # Read metadata
-    metadata_file="$DB_PATH/$selected_table/metadata"
+    metadata_file="$ACTIVE_DB_PATH/$selected_table/metadata"
     IFS=',' read -ra COLUMNS <<< $(cat "$metadata_file")
     
     # Get values
@@ -253,7 +253,7 @@ insert_into_table() {
     done
     
     # Save record
-    if echo "$data_string" >> "$DB_PATH/$selected_table/data"; then
+    if echo "$data_string" >> "$ACTIVE_DB_PATH/$selected_table/data"; then
         echo -e "\nRecord inserted successfully!"
     else
         echo -e "\nError inserting record!"

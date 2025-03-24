@@ -5,7 +5,7 @@ source ./utils
 source ./table_menu
 
 # Ensure database directory exists
-ensure_db_path
+ensure_ACTIVE_DB_PATH
 
 create_database() {
     echo -e "\nCreate Database"
@@ -17,18 +17,18 @@ create_database() {
     check_db_name "$db_name" || return 1
     
     # Check if database already exists
-    if [[ -d "$DB_PATH/$db_name" ]]; then
+    if [[ -d "$DBS_PATH/$db_name" ]]; then
         echo "Error: Database '$db_name' already exists."
         return 1
     fi
     
     # Create database directory
-    if mkdir "$DB_PATH/$db_name" 2>/dev/null; then
+    if mkdir "$DBS_PATH/$db_name" 2>/dev/null; then
         echo "Database '$db_name' created successfully."
         
         # Ask if user wants to connect to the new database
         if confirm_action "Would you like to connect to the new database?"; then
-            export DB_PATH="$DB_PATH/$db_name"
+            export ACTIVE_DB_PATH="$DBS_PATH/$db_name"
             export DB_NAME="$db_name"
 			echo "Connected to database: $DB_NAME"
             table_menu
@@ -44,12 +44,12 @@ list_databases() {
     echo "============================================== "
     
     if ! list_all_databases; then
-        echo "No databases found in $DB_PATH"
+        echo "No databases found in $DBS_PATH"
         return 1
     fi
     
     # Display total count
-    local count=$(ls -l "$DB_PATH" | grep "^d" | wc -l)
+    local count=$(ls -l "$DBS_PATH" | grep "^d" | wc -l)
     echo -e "\nTotal databases: $count"
 }
 
@@ -72,7 +72,7 @@ drop_database() {
     fi
     
     # Get database count
-    local db_count=$(ls -l "$DB_PATH" | grep "^d" | wc -l)
+    local db_count=$(ls -l "$DBS_PATH" | grep "^d" | wc -l)
     
     # Validate choice
     if ! validate_number "$choice" 1 "$db_count"; then
@@ -80,7 +80,7 @@ drop_database() {
     fi
     
     # Get database name from choice
-    local db_name=$(ls -l "$DB_PATH" | grep "^d" | awk '{print $9}' | sed -n "${choice}p")
+    local db_name=$(ls -l "$DBS_PATH" | grep "^d" | awk '{print $9}' | sed -n "${choice}p")
     
     # Confirm deletion
     if ! confirm_action "Are you sure you want to drop database '$db_name'?"; then
@@ -88,11 +88,11 @@ drop_database() {
     fi
     
     # Remove database
-    if rm -r "$DB_PATH/$db_name" 2>/dev/null; then
+    if rm -r "$DBS_PATH/$db_name" 2>/dev/null; then
         echo "Database '$db_name' dropped successfully"
         
         # Clear global variable if it was the current database
-        if [[ "$DB_NAME" == "$DB_PATH/$db_name" ]]; then
+        if [[ "$DB_NAME" == "$DBS_PATH/$db_name" ]]; then
             export DB_NAME=""
         fi
     else
@@ -120,7 +120,7 @@ rename_database() {
     fi
     
     # Get database count
-    local db_count=$(ls -l "$DB_PATH" | grep "^d" | wc -l)
+    local db_count=$(ls -l "$DBS_PATH" | grep "^d" | wc -l)
     
     # Validate choice
     if ! validate_number "$choice" 1 "$db_count"; then
@@ -128,18 +128,18 @@ rename_database() {
     fi
     
     # Get old database name from choice
-    local old_name=$(ls -l "$DB_PATH" | grep "^d" | awk '{print $9}' | sed -n "${choice}p")
+    local old_name=$(ls -l "$DBS_PATH" | grep "^d" | awk '{print $9}' | sed -n "${choice}p")
     
     # Get new name    echo "=================="
 
     # Rename database
-    if mv "$DB_PATH/$old_name" "$DB_PATH/$new_name" 2>/dev/null; then
+    if mv "$DBS_PATH/$old_name" "$DBS_PATH/$new_name" 2>/dev/null; then
         echo "Database renamed successfully"
         echo "'$old_name' → '$new_name'"
         
         # Update global variable if it was the current database
-        if [[ "$DB_NAME" == "$DB_PATH/$old_name" ]]; then
-            export DB_NAME="$DB_PATH/$new_name"
+        if [[ "$DB_NAME" == "$old_name" ]]; then
+            export DB_NAME="$new_name"
         fi
     else
         echo "Error: Failed to rename database"
@@ -166,7 +166,7 @@ connect_database() {
     fi
     
     # Get database count
-    local db_count=$(ls -l "$DB_PATH" | grep "^d" | wc -l)
+    local db_count=$(ls -l "$DBS_PATH" | grep "^d" | wc -l)
     
     # Validate choice
     if ! validate_number "$choice" 1 "$db_count"; then
@@ -174,10 +174,10 @@ connect_database() {
     fi
     
     # Get database name from choice
-    local db_name=$(ls -l "$DB_PATH" | grep "^d" | awk '{print $9}' | sed -n "${choice}p")
+    local db_name=$(ls -l "$DBS_PATH" | grep "^d" | awk '{print $9}' | sed -n "${choice}p")
     
     # Set global variable and connect
-    export DB_NAME="$DB_PATH/$db_name"
+    export DB_NAME="$DBS_PATH/$db_name"
     echo "Connected to database: $DB_NAME"
     table_menu
 }
