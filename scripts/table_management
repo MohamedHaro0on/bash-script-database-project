@@ -41,7 +41,10 @@ create_table() {
     
     # Get column details
     metadata=""
-    for ((i=1; i<=$col_count; i++)); do
+    # Primary Key Check
+    pk=0
+    for ((i=1; i<=$col_count; i++)); 
+    do
         # Get and validate column name
         while true; do
             read -p "Enter name for column $i: " col_name
@@ -64,14 +67,32 @@ create_table() {
                 break
             fi
         done
-        
-        # Build metadata string
-        if [ $i -eq $col_count ]; then
-            metadata+="$col_name:$selected_type"
+       # Check if this column should be the primary key
+        if [ $pk -eq 0 ]
+        then
+        	read -p "Do you Want to make $col_name Primary Key (y/n): " checkPk
+        	if [[ $checkPk = "y" ]]
+        	then
+        		metadata+="$col_name:$selected_type:PK"
+        		pk=1
+        	else
+        		metadata+="$col_name:$selected_type"
+        	fi
         else
-            metadata+="$col_name:$selected_type,"
+            metadata+="$col_name:$selected_type"
+        fi    
+        
+        if [ $i -ne $col_count ]
+        then
+        	metadata+=","
         fi
     done
+    
+    # Ensure at least one PK is set
+    if [ $pk -eq 0 ]; then
+    	echo "Error: At least one column must be set as a Primary Key."
+    	return 1
+    fi
     
     # Save metadata
     echo "$metadata" > "$ACTIVE_DB_PATH/$table_name/metadata"
