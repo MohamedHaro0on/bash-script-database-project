@@ -90,67 +90,55 @@ get_table_record_count() {
 }
 
 # Data type regex patterns
-REGEX_PATTERNS=(
-    ["string"]="^[a-zA-Z0-9\.\ \-\_\,\']+$"
-    ["integer"]="^[\-]?[0-9]+$"
-    ["float"]="^[\-]?[0-9]+\.?[0-9]*$"
-    ["date"]="^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$"
-    ["DB_NAME_REGEX"]="^[a-zA-Z][a-zA-Z0-9_]*$"
-    ["TABLE_NAME_REGEX"]="^[a-zA-Z][a-zA-Z0-9_]*$"
-    ["COLUMN_NAME_REGEX"]="^[a-zA-Z][a-zA-Z0-9_]*$"
-)
+declare -A REGEX_PATTERNS
+REGEX_PATTERNS[string]="^[a-zA-Z0-9\.\ \-\_\,\']+$"
+REGEX_PATTERNS[integer]='^[\-]?[0-9]+$'
+REGEX_PATTERNS[float]='^[\-]?[0-9]+\.?[0-9]*$'
+REGEX_PATTERNS[date]='^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$'
+REGEX_PATTERNS[DB_NAME_REGEX]='^[a-zA-Z][a-zA-Z0-9_]*$'
+REGEX_PATTERNS[TABLE_NAME_REGEX]='^[a-zA-Z][a-zA-Z0-9_]*$'
+REGEX_PATTERNS[COLUMN_NAME_REGEX]='^[a-zA-Z][a-zA-Z0-9_]*$'
 
 # Data type validation function
 validate_data_type() {
     value=$1
-    type=$2
-    
-    case $type in
-        "string")
-            if [[ "$value" =~ ${REGEX_PATTERNS["string"]} ]]; then
-                return 0
-            fi
-            echo "Invalid string format. Use only letters, numbers, spaces, and basic punctuation"
-            ;;
-            
+    full_type=$2
+    base_type=$(echo "$full_type" | cut -d':' -f1)  # Extract "integer" from "integer:PK"
+    #echo "DEBUG: Checking value='$value' with extracted type='$base_type'"
+    #echo "DEBUG: Using regex pattern '${REGEX_PATTERNS[integer]}'"
+
+    case $base_type in
         "integer")
             if [[ "$value" =~ ${REGEX_PATTERNS["integer"]} ]]; then
+                #echo "DEBUG: '$value' is a valid integer"
                 return 0
             fi
-            echo "Invalid integer format. Enter a whole number"
+            echo "Invalid input for $value! Expected type: $base_type."
             ;;
-            
         "float")
             if [[ "$value" =~ ${REGEX_PATTERNS["float"]} ]]; then
                 return 0
             fi
-            echo "Invalid float format. Enter a number (decimal point optional)"
+            echo "Invalid input for $value! Expected type: $base_type."
             ;;
-            
+        "string")
+            if [[ "$value" =~ ${REGEX_PATTERNS["string"]} ]]; then
+                return 0
+            fi
+            echo "Invalid input for $value! Expected type: $base_type."
+            ;;
         "date")
             if [[ "$value" =~ ${REGEX_PATTERNS["date"]} ]]; then
-                # Additional date validation
-                year=${value:0:4}
-                month=${value:5:2}
-                day=${value:8:2}
-                
-                if [ "$month" -ge 1 ] && [ "$month" -le 12 ] && \
-                   [ "$day" -ge 1 ] && [ "$day" -le 31 ]; then
-                    return 0
-                fi
-                echo "Invalid date values. Use valid month (1-12) and day (1-31)"
-            else
-                echo "Invalid date format. Use YYYY-MM-DD"
+                return 0
             fi
+            echo "Invalid input for $value! Expected type: $base_type (YYYY-MM-DD)."
             ;;
-            
         *)
-            echo "Unknown data type: $type"
+            echo "Unknown data type: $full_type"
             ;;
     esac
     return 1
 }
-
 # Name validation functions
 validate_table_name() {
     local name=$1

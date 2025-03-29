@@ -226,61 +226,110 @@ rename_table() {
     fi
 }
 
-insert_into_table() {
-    echo -e "\nInsert Into Table"
-    echo "============================================== "
-    
-    # Check database and display tables
-    check_db_exists || return 1
-    display_tables || return 1
-    
-    # Get table selection
-    while true; do
-        read -p $'\nSelect table number to insert into (or 0 to cancel): ' choice
-        
-        if [ "$choice" -eq 0 ]; then
-            echo "Operation cancelled"
-            return 0
-        fi
-        
-        if validate_number "$choice" 1 ${#table_names[@]}; then
-            selected_table=${table_names[$choice]}
-            break
-        fi
-    done
-    
-    # Read metadata
-    metadata_file="$ACTIVE_DB_PATH/$selected_table/metadata"
-    IFS=',' read -ra COLUMNS <<< $(cat "$metadata_file")
-    
-    # Get values
-    data_string=""
-    echo -e "\nEnter values for each column:"
-    for column in "${COLUMNS[@]}"; do
-        IFS=':' read -ra COL_INFO <<< "$column"
-        col_name=${COL_INFO[0]}
-        col_type=${COL_INFO[1]}
-        
-        while true; do
-            read -p "$col_name ($col_type): " value
-            if validate_data_type "$value" "$col_type"; then
-                break
-            fi
-        done
-        
-        # Build data string
-        if [ -z "$data_string" ]; then
-            data_string="$value"
-        else
-            data_string="$data_string:$value"
-        fi
-    done
-    
-    # Save record
-    if echo "$data_string" >> "$ACTIVE_DB_PATH/$selected_table/data"; then
-        echo -e "\nRecord inserted successfully!"
-    else
-        echo -e "\nError inserting record!"
-        return 1
-    fi
-}
+insert_into_table(){
+echo -e "\n Insert Into Table"
+echo "============================"
+
+# Ensure An Active DataBase is selected
+if [[ -z "$ACTIVE_DB_PATH" ]]
+then
+	echo "No Database Selected! Please Connect To a Database First."
+	return 1
+fi
+
+# Get List Of Tables
+local tables=($(ls "$ACTIVE_DB_PATH")) # Store tables in an array
+
+if [[ ${#tables[@]} -eq 0 ]]
+then
+	echo "No Tables Found in Database $ACTIVE_DB_PATH"
+	return 1
+fi
+
+
+# Display Tables
+echo -e "\n Available Tables: "
+local index=1
+for table in "${tables[@]}"
+do
+	echo "$index) $table"
+	((index++))
+done
+
+# Get User Selection
+while true
+do
+	read -p $'\n Select Table Number To Insert into (or 0 To Cancel) : ' choice
+	if [[ $choice -eq 0 ]] 
+	then
+		echo "Operation Cancelled"
+		return 0
+	fi
+	if [[ $choice -ge 1 && $choice -le ${#tables[@]} ]]
+	then
+		selected_table="${tables[$((choice-1))]}"
+		break
+	else
+		echo "Inavlid Selection. Please,Enter a Number Between 1 & ${#tables[@]}"
+	fi
+done
+# Read Metadata file
+
+# Metadata file path
+metadata_file=$ACTIVE_DB_PATH/$selected_table/metadata
+#echo "DEBUG: ACTIVE_DB_PATH -> '$ACTIVE_DB_PATH'"
+#echo "DEBUG: selected_table -> '$selected_table'"
+#echo "DEBUG: Checking metadata file at: $metadata_file"  # Debug line
+if [[ ! -f $metadata_file ]] 
+then
+	echo "Error:Metadata File For Table $selected_table not found!"
+	return 1
+fi
+
+# Read Column Definitions From Metadata
+IFS=',' read -ra COLUMNS < "$metadata_file"
+
+if [[ ${#COLUMNS[@]} -eq 0 ]] 
+then
+	echo "Error : No Columns Found in metadata!"
+	return 1
+fi
+
+#Collect Values For Each Column
+new_record=""
+echo -e "\nEnter Values For Each Column:"
+
+for column in ${COLUMNS[@]}
+do
+	IFS=":" read -r col_name col_type <<< "$column" # Extract column name & type
+	while true
+	do
+		read -p "$col_name ($col_type): " value
+		# Validate Value Based On Type
+		if validate_data_type "$value" "$col_type" 
+		then
+			break
+		else
+			echo "Invalid Input! Expected type : $col_type."
+		fi
+	done
+	
+	# Build The New Record (colon-separated values)
+	if [[ -z "$new_record" ]]
+	then
+		new_record="$value"
+	else
+		new_record="$new_record:$value"
+	fi
+done
+# Append The New Record To The Table's data file
+data_file="$ACTIVE_DB_PATH/$selected_table/data"
+
+if echo "$new_record" >> "$data_file"
+then
+	echo -e "\n Record Inserted Successfully!"
+else
+	echo "Error Inserting Record!"
+	return 1 
+fi
+}	 
