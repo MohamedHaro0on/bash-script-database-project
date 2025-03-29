@@ -238,20 +238,23 @@ insert_into_table() {
     while true; do
         read -p $'\nSelect table number to insert into (or 0 to cancel): ' choice
         
+        if validate_number "$choice" 0 ${#table_names[@]}; then
+            selected_table=${table_names[$choice]}
+            break
+        fi
         if [ "$choice" -eq 0 ]; then
             echo "Operation cancelled"
             return 0
-        fi
-        
-        if validate_number "$choice" 1 ${#table_names[@]}; then
-            selected_table=${table_names[$choice]}
-            break
         fi
     done
     
     # Read metadata
     metadata_file="$ACTIVE_DB_PATH/$selected_table/metadata"
-    IFS=',' read -ra COLUMNS <<< $(cat "$metadata_file")
+    if [ ! -f "$metadata_file" ]; then
+        echo "Metadata file not found for $selected_table"
+        return 1
+    fi
+    IFS=',' read -ra COLUMNS <<< "$(cat "$metadata_file")"
     
     # Get values
     data_string=""
@@ -260,7 +263,7 @@ insert_into_table() {
         IFS=':' read -ra COL_INFO <<< "$column"
         col_name=${COL_INFO[0]}
         col_type=${COL_INFO[1]}
-        
+        is_pk=${COL_INFO[2]}
         while true; do
             read -p "$col_name ($col_type): " value
             if validate_data_type "$value" "$col_type"; then
@@ -268,7 +271,6 @@ insert_into_table() {
             fi
         done
         
-        # Build data string
         if [ -z "$data_string" ]; then
             data_string="$value"
         else
@@ -277,7 +279,8 @@ insert_into_table() {
     done
     
     # Save record
-    if echo "$data_string" >> "$ACTIVE_DB_PATH/$selected_table/data"; then
+    data_file="$ACTIVE_DB_PATH/$selected_table/data"
+    if echo "$data_string" >> "$data_file"; then
         echo -e "\nRecord inserted successfully!"
     else
         echo -e "\nError inserting record!"
