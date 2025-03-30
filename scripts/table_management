@@ -227,13 +227,14 @@ rename_table() {
 }
 
 insert_into_table() {
+
     echo -e "\nInsert Into Table"
     echo "============================================== "
     
     # Check database and display tables
     check_db_exists || return 1
     display_tables || return 1
-    
+   
     # Get table selection
     while true; do
         read -p $'\nSelect table number to insert into (or 0 to cancel): ' choice
@@ -285,5 +286,183 @@ insert_into_table() {
     else
         echo -e "\nError inserting record!"
         return 1
+    fi
+}
+# UPDATE Functionality
+update_table(){
+echo -e "\nUpdate Table"
+echo "============================================== "
+    
+#1-Prompt the user for the table name.   
+# Ensure An Active DataBase is selected 
+if [[ -z "$ACTIVE_DB_PATH" ]]
+then
+	echo "No Database Selected! Please Connect To a Database First."
+	return 1
+fi
+
+# Get List Of Tables
+local tables=($(ls "$ACTIVE_DB_PATH")) # Store tables in an array
+
+if [[ ${#tables[@]} -eq 0 ]]
+then
+	echo "No Tables Found in Database $ACTIVE_DB_PATH"
+	return 1
+fi
+
+# Display Tables
+echo -e "\n Available Tables: "
+local index=1
+for table in "${tables[@]}"
+do
+	echo "$index) $table"
+	((index++))
+done
+
+# Get User Selection
+while true
+do
+	read -p $'\n Select Table Number To Update(or 0 To Cancel) : ' choice
+	if [[ $choice -eq 0 ]] 
+	then
+		echo "Operation Cancelled"
+		return 0
+	fi
+	if [[ $choice -ge 1 && $choice -le ${#tables[@]} ]]
+	then
+		selected_table="${tables[$((choice-1))]}"
+		break
+	else
+		echo "Inavlid Selection. Please,Enter a Number Between 1 & ${#tables[@]}"
+	fi
+done
+#2-Read Metadata file & data file
+metadata_file="$ACTIVE_DB_PATH/$selected_table/metadata"
+data_file="$ACTIVE_DB_PATH/$selected_table/data"
+
+if [[ ! -f "$metadata_file" || ! -f "$data_file" ]]; 
+then
+        echo "Error: Table $selected_table Does Not Exist!"
+        return 1
+fi
+
+#Read metadata (Extract Column Names)
+IFS=',' read -ra COLUMNS < "$metadata_file"
+  
+#3-Prompt the user for the column to search by and the value.
+# Display Columns
+echo -e "\n Available Columns: "
+local index=1
+for column in "${COLUMNS[@]}"
+do
+	echo "$index) $column"
+	((index++))
+done
+
+# Get User Selection
+while true
+do
+	read -p $'\n Select Column Number To Update(or 0 To Cancel) : ' choice
+	if [[ $choice -eq 0 ]] 
+	then
+		echo "Operation Cancelled"
+		return 0
+	fi
+	if [[ $choice -ge 1 && $choice -le ${#COLUMNS[@]} ]]
+	then
+        	IFS=":" read -r search_column _ <<< "${COLUMNS[$((choice-1))]}"
+		column_index=$((choice-1))
+		break
+	else
+		echo "Inavlid Selection. Please,Enter a Number Between 1 & ${#COLUMNS[@]}"
+	fi
+done
+
+read -p "Enter value to search for: " search_value
+
+    # Identify column index
+    column_index=-1
+    for i in "${!COLUMNS[@]}"; do
+        IFS=":" read -r col_name col_type <<< "${COLUMNS[i]}"
+        if [[ "$col_name" == "$search_column" ]]; then
+            column_index=$i
+            break
+        fi
+    done
+
+    if [[ $column_index -eq -1 ]]; then
+        echo "Error: Column $search_column Not Found!"
+        return 1
+    fi
+
+
+#Search For The Record In Data File
+match_found=false
+while IFS= read -r line
+do
+	IFS=":" read -ra values <<< "$line"
+	#echo "Checking line: $line"  # Debugging statement
+	if [[ "${values[column_index]}" == "$search_value" ]]
+	then
+		match_found=true
+		old_record="$line"
+		#echo "Match Found: $old_record"  # Debugging statement
+		break
+	fi
+done < "$data_file"	
+
+if [[ "$match_found" == false ]]
+then
+	echo "Error: No Matching Record Found!"
+	return 1
+fi
+
+# Display The Current Record
+echo -e "\nCurrent Record: $old_record"
+new_record=""
+updated=false  # Track if any changes were made
+for i in "${!COLUMNS[@]}"
+do
+        IFS=":" read -r col_name col_type <<< "${COLUMNS[i]}"
+        if [[ "$col_name" == "$search_column" ]] 
+        then
+        	while true 
+        	do
+        		read -p "Enter new value for $col_name ($col_type) (leave empty to keep current): " new_value
+        		if [[ -z "$new_value" ]]
+        		then
+        			new_value="${values[i]}"
+        			break
+        		fi
+        			# Validate Value Based On Type
+				if validate_data_type "$new_value" "$col_type" 
+				then
+					updated=true  # Mark that an update occurred
+					break
+				else
+					echo "Invalid Input for $col_name. Please enter a valid $col_type."
+				fi
+		done
+	fi
+	# Construct the new record
+        if [[ -z "$new_record" ]]; then
+            new_record="$new_value"
+        else
+            new_record="$new_record:$new_value"
+        fi
+done
+    
+    if [[ "$updated" == true ]] 
+    then
+    	
+ 	# Replace the old record with the new one
+ 	awk -F':' -v col="$((column_index+1))" -v old="$search_value" -v new="$new_value" 'BEGIN {OFS=":"} 
+    	{
+        	if ($col == old) $col = new;
+        	print $0;
+    	}' "$data_file" > temp_file && mv temp_file "$data_file"
+	echo -e "\n Record Updated Successfully!"
+    else
+    	    echo -e "\n No changes were made."
     fi
 }
