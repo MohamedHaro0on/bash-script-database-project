@@ -1,7 +1,5 @@
 #!/usr/bin/bash
 
-source ../configs/config
-source ./utils
 #======================================================================= Create Table ===========================================================
 create_table() {
     echo -e "\nCreate Table"
@@ -12,7 +10,7 @@ create_table() {
     
     # Get and validate table name
     while true; do
-        read -p "Enter table name: " table_name
+        IFS= read -r -p "Enter table name: " table_name
         if ! validate_table_name "$table_name"; then
             continue
         fi
@@ -33,7 +31,7 @@ create_table() {
     
     # Get column count
     while true; do
-        read -p "Enter number of columns: " col_count
+        IFS= read -r -p "Enter number of columns: " col_count
         if validate_number "$col_count" 1 100; then
             break
         fi
@@ -47,7 +45,7 @@ create_table() {
     do
         # Get and validate column name
         while true; do
-            read -p "Enter name for column $i: " col_name
+            IFS= read -r -p "Enter name for column $i: " col_name
             if validate_column_name "$col_name"; then
                 break
             fi
@@ -61,7 +59,7 @@ create_table() {
         
         # Get data type
         while true; do
-            read -p "Select data type for $col_name (1-${#SUPPORTED_DATATYPES[@]}): " type_choice
+            IFS= read -r -p "Select data type for $col_name (1-${#SUPPORTED_DATATYPES[@]}): " type_choice
             if validate_number "$type_choice" 1 ${#SUPPORTED_DATATYPES[@]}; then
                 selected_type=${SUPPORTED_DATATYPES[$((type_choice-1))]}
                 break
@@ -70,7 +68,7 @@ create_table() {
        # Check if this column should be the primary key
         if [ $pk -eq 0 ]
         then
-        	read -p "Do you Want to make $col_name Primary Key (y/n): " checkPk
+        	IFS= read -r -p "Do you Want to make $col_name Primary Key (y/n): " checkPk
         	if [[ $checkPk = "y" ]]
         	then
         		metadata+="$col_name:$selected_type:PK"
@@ -154,7 +152,7 @@ drop_table() {
     
     # Get table selection
     while true; do
-        read -p $'\nEnter table number to drop (or 0 to cancel): ' choice
+        IFS= read -r -p $'\nEnter table number to drop (or 0 to cancel): ' choice
         
         if [ "$choice" -eq 0 ]; then
             echo "Operation cancelled"
@@ -188,7 +186,7 @@ rename_table() {
     
     # Get table selection
     while true; do
-        read -p $'\nEnter table number to rename (or 0 to cancel): ' choice
+        IFS= read -r -p $'\nEnter table number to rename (or 0 to cancel): ' choice
         
         if [ "$choice" -eq 0 ]; then
             echo "Operation cancelled"
@@ -203,7 +201,7 @@ rename_table() {
     
     # Get new name
     while true; do
-        read -p "Enter new table name: " new_table_name
+        IFS= read -r -p "Enter new table name: " new_table_name
         if ! validate_table_name "$new_table_name"; then
             continue
         fi
@@ -237,7 +235,7 @@ insert_into_table() {
    
     # Get table selection
     while true; do
-        read -p $'\nSelect table number to insert into (or 0 to cancel): ' choice
+        IFS= read -r -p $'\nSelect table number to insert into (or 0 to cancel): ' choice
         
         if validate_number "$choice" 0 ${#table_names[@]}; then
             selected_table=${table_names[$choice]}
@@ -295,7 +293,7 @@ insert_into_table() {
         col_type=${COL_INFO[1]}
         is_pk=${COL_INFO[2]}
         while true; do
-            read -p "$col_name ($col_type): " value
+            IFS= read -r -p "$col_name ($col_type): " value
             if validate_data_type "$value" "$col_type"; 
             then
             if [[ "$col_name" == "$pk_name" ]]; then  # Check if this is the PK column
@@ -358,7 +356,7 @@ done
 # Get User Selection
 while true
 do
-	read -p $'\n Select Table Number To Update(or 0 To Cancel) : ' choice
+	IFS= read -r -p $'\n Select Table Number To Update(or 0 To Cancel) : ' choice
 	if [[ $choice -eq 0 ]] 
 	then
 		echo "Operation Cancelled"
@@ -398,7 +396,7 @@ done
 # Get User Selection
 while true
 do
-	read -p $'\n Select Column Number To Update(or 0 To Cancel) : ' choice
+	IFS= read -r -p $'\n Select Column Number To Update(or 0 To Cancel) : ' choice
 	if [[ $choice -eq 0 ]] 
 	then
 		echo "Operation Cancelled"
@@ -414,7 +412,7 @@ do
 	fi
 done
 
-read -p "Enter value to search for: " search_value
+IFS= read -r -p "Enter value to search for: " search_value
 
 # 5. Search for Matching Records
     matches=()
@@ -443,7 +441,7 @@ read -p "Enter value to search for: " search_value
 
         while true 
         do
-            read -p $'\n Select the record to update (or 0 to Cancel): ' record_choice
+            IFS= read -r -p $'\n Select the record to update (or 0 to Cancel): ' record_choice
             if [[ $record_choice -eq 0 ]] 
             then
                 echo "Update Cancelled."
@@ -465,7 +463,7 @@ echo -e "\nSelected Record: $old_record"
 IFS=":" read -ra values <<< "$old_record"
 
 IFS=":" read -r col_name col_type <<< "${COLUMNS[column_index]}"
-read -p "Enter new value for $col_name ($col_type) (leave empty to keep current): " new_value
+IFS= read -r -p "Enter new value for $col_name ($col_type) (leave empty to keep current): " new_value
 
 if [[ -z "$new_value" ]] 
 then
@@ -526,7 +524,7 @@ done
 # Get User Selection
 while true
 do
-	read -p $'\n Select Table Number To Select(or 0 To Cancel) : ' choice
+	IFS= read -r -p $'\n Select Table Number To Select(or 0 To Cancel) : ' choice
 	if [[ $choice -eq 0 ]] 
 	then
 		echo "Operation Cancelled"
@@ -566,7 +564,7 @@ done
 
 #4] Ask for Columns to Display (Projection)
    # Get User Selection
-	read -p $'\nSelect Column Numbers To Display (comma-separated, or 0 for all): ' choice
+	IFS= read -r -p $'\nSelect Column Numbers To Display (comma-separated, or 0 for all): ' choice
 	selected_indexes=()
 	if [[ $choice -eq 0 ]] 
 	then
@@ -589,14 +587,14 @@ done
         	done
    	fi
 #5] Ask for Filtering Conditions (Selection)
-    read -p $'\nDo You Want To Apply A Filter Condition? (y/n): ' apply_filter
+    IFS= read -r -p $'\nDo You Want To Apply A Filter Condition? (y/n): ' apply_filter
     if [[ "$apply_filter" =~ ^[Yy](es)?$ ]]
     then
-    	read -p "Enter Column Number For Filtering: " filter_col_index
+    	IFS= read -r -p "Enter Column Number For Filtering: " filter_col_index
     	if [[ $filter_col_index -ge 1 && $filter_col_index -le ${#COLUMNS[@]} ]] 
     	then
             filter_col_index=$((filter_col_index - 1))  # Convert to zero-based index
-            read -p "Enter Value To Match in ${COLUMNS[$filter_col_index]}: " filter_value
+            IFS= read -r -p "Enter Value To Match in ${COLUMNS[$filter_col_index]}: " filter_value
     	else
     		echo "Invalid Column Selection For Filtering."
     		apply_filter="n"
@@ -636,10 +634,10 @@ delete_from_table () {
 
         # Get table selection
         while true; do
-            read -p $'\nSelect table number to delete from (or -1 to cancel): ' choice
+            IFS= read -r -p $'\nSelect table number to delete from (or -1 to cancel): ' choice
 
-            if validate_number "$choice" -1 ${#table_names[@]}; then
-                if [ "$choice" -eq -1 ]; then
+            if validate_number "$choice" 0 ${#table_names[@]}; then
+                if [ "$choice" -eq 0 ]; then
                     echo "Operation cancelled"
                     return 0
                 fi
@@ -653,9 +651,9 @@ delete_from_table () {
 
         # Get column selection
         while true; do
-            read -p $'\nSelect column number: ' col_choice
+            IFS= read -r -p $'\nSelect column number: ' col_choice
 
-            if validate_number "$col_choice" 0 $((${#cols[@]} - 1)); then
+            if validate_number "$col_choice" 0 $((${#cols[@]} 0)); then
                 selected_column=${cols[$col_choice]}
                 break
             fi
@@ -666,7 +664,7 @@ delete_from_table () {
         done
 
         # Prompt for a value to match in the selected column
-        read -p "Enter the value to find records where $selected_column equals: " value_to_delete
+        IFS= read -r -p "Enter the value to find records where $selected_column equals: " value_to_delete
 
         # Read and display matched records
         data_file="$ACTIVE_DB_PATH/$selected_table/data"
@@ -689,7 +687,7 @@ delete_from_table () {
 
         # Allow user to select which record to delete
         while true; do
-            read -p "Select record number to delete (or -1 to cancel): " record_choice
+            IFS= read -r -p "Select record number to delete (or -1 to cancel): " record_choice
 
             if validate_number "$record_choice" -1 ${#matched_records[@]}; then
                 if [ "$record_choice" -eq -1 ]; then
@@ -721,7 +719,7 @@ delete_from_table () {
         echo "Record deleted successfully!"
 
         # Ask if the user wants to perform another deletion
-        read -p "Do you want to delete another record? (y/n): " continue_choice
+        IFS= read -r -p "Do you want to delete another record? (y/n): " continue_choice
         if [[ "$continue_choice" != "y" ]]; then
             break
         fi

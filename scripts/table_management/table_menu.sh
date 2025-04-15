@@ -1,10 +1,8 @@
 #! /usr/bin/bash
 
-source ./table_management
-source ../configs/config
-source ./utils
-# source ./db_management
 
+pwd
+source "./scripts/table_management/table_management.sh"
 
 
 table_menu(){

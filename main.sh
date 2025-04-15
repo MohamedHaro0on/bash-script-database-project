@@ -1,9 +1,9 @@
 #! /usr/bin/bash
 
-source ./db_management
-source ./table_menu
-source ./utils
-source ../configs/config
+source "./configs/config.sh"
+source "./utils/utils.sh"
+source "./scripts/table_management/table_menu.sh"
+source "./scripts/db_management/db_management.sh"
 
 
 PS3="Please, Select An Option: "

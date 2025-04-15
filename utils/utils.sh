@@ -1,7 +1,5 @@
 #!/usr/bin/bash
 
-source ../configs/config
-
 # Database Operations Utils
 check_db_name() {
     local name=$1
@@ -122,13 +120,13 @@ get_table_record_count() {
 
 # Data type regex patterns
 declare -A REGEX_PATTERNS
-REGEX_PATTERNS[string]="^(?!.*\\)[a-zA-Z0-9 ._,-]{2,}$"
-REGEX_PATTERNS[integer]='^-?[0-9]+$'
-REGEX_PATTERNS[float]='^-?[0-9]+\.?[0-9]*$'
-REGEX_PATTERNS[date]='^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
-REGEX_PATTERNS[DB_NAME_REGEX]='[a-zA-Z][a-zA-Z0-9_]$'
-REGEX_PATTERNS[TABLE_NAME_REGEX]='^(?!.*\\)[a-zA-Z][a-zA-Z0-9_]{2,}$'
-REGEX_PATTERNS[COLUMN_NAME_REGEX]='^(?!.*\\)[a-zA-Z][a-zA-Z0-9_]{2,}$'
+REGEX_PATTERNS[string]="^[a-zA-Z0-9\.\ \-\_\,\']+$"
+REGEX_PATTERNS[integer]='^[\-]?[0-9]+$'
+REGEX_PATTERNS[float]='^[\-]?[0-9]+\.?[0-9]*$'
+REGEX_PATTERNS[date]='^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$'
+REGEX_PATTERNS[DB_NAME_REGEX]='^[a-zA-Z][a-zA-Z0-9_]*$'
+REGEX_PATTERNS[TABLE_NAME_REGEX]='^[a-zA-Z][a-zA-Z0-9_]*$'
+REGEX_PATTERNS[COLUMN_NAME_REGEX]='^[a-zA-Z][a-zA-Z0-9_]*$'
 # Supported data types array
 SUPPORTED_DATATYPES=("string" "integer" "float" "date")
 
