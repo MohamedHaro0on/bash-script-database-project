@@ -11,15 +11,15 @@ rename_table() {
     # Get table selection
     while true; do
         IFS= read -r -p $'\nEnter table number to rename (or 0 to cancel): ' choice
-        
-        if [ "$choice" -eq 0 ]; then
-            echo "Operation cancelled"
-            return 0
-        fi
-        
+
         if validate_number "$choice" 1 ${#table_names[@]}; then
             selected_table=${table_names[$choice]}
             break
+        elif validate_number "$choice" 0 ${#table_names[@]} && [[ "$choice" -eq 0 ]]; then            
+            echo "Operation cancelled"
+            return 0
+        else
+            echo "Not Matched Choice"
         fi
     done
     

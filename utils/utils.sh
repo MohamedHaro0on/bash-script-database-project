@@ -213,7 +213,7 @@ validate_number() {
     local min=$2
     local max=$3
     if [[ ! "$num" =~ ^[0-9]+$ ]] || [ "$num" -lt "$min" ] || [ "$num" -gt "$max" ]; then
-        echo "Please enter a number between $min and $max"
+        #echo "Please enter a number between $min and $max"
         return 1
     fi
     return 0
