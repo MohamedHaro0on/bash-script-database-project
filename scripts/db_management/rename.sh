@@ -7,26 +7,28 @@ rename_database() {
     if ! list_all_databases; then
         return 1
     fi
-    
-    # Get database selection
-    IFS= read -r -p $'\nEnter database number to rename (or 0 to cancel): ' choice
-    
-    # Check if user wants to cancel
-    if [ "$choice" -eq 0 ]; then
-        echo "Operation cancelled"
-        return 0
-    fi
-    
-    # Get database count
-    local db_count=$(ls -l "$DBS_PATH" | grep "^d" | wc -l)
-    
-    # Validate choice
-    if ! validate_number "$choice" 1 "$db_count"; then
-        return 1
-    fi
-    
+    db_count=${#db_names[@]}
+
+    # Get user choice
+    while true
+    do
+        IFS= read -r -p $'\nEnter database number to rename (or 0 to cancel): ' choice
+
+        if validate_number "$choice" 1 "$db_count"; 
+        then
+            selected_database="${db_names[$((choice - 1))]}"
+            break
+        elif validate_number "$choice" 0 ${#db_names[@]} && [[ "$choice" -eq 0 ]]; 
+        then
+            echo "Operation cancelled"
+            return 0
+        else
+            echo "Invalid choice. Please select a number between 1 and $db_count, or 0 to cancel."
+        fi
+    done
+
     # Get old database name from choice
-    local old_name=$(ls -l "$DBS_PATH" | grep "^d" | awk '{print $9}' | sed -n "${choice}p")
+    local old_name="$selected_database"
     
     # Get new name
     while true; do

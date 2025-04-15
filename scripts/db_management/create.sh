@@ -1,8 +1,5 @@
 #!/usr/bin/bash
 
-
-
-
 create_database() {
     echo -e "\nCreate Database"
     echo "============================================== "

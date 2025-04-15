@@ -24,16 +24,31 @@ ensure_ACTIVE_DB_PATH() {
 }
 
 list_all_databases() {
-    if [[ -z "$(ls -A "$DBS_PATH")" ]]; then
-        echo "No databases found"
+    if [[ ! -d "$DBS_PATH" ]]; then
+        echo "Databases directory does not exist."
         return 1
     fi
+
+    db_names=()
+    for dir in "$DBS_PATH"/*; do
+        if [[ -d "$dir" ]]; then
+            db_names+=("$(basename "$dir")")
+        fi
+    done
+
+    if [[ ${#db_names[@]} -eq 0 ]]; then
+        echo "No databases found."
+        return 1
+    fi
+
     echo -e "\nAvailable Databases:"
     echo "==================="
-    ls -l "$DBS_PATH" | grep "^d" | awk '{print NR ") " $9}'
+    for i in "${!db_names[@]}"; do
+        echo "$((i + 1))) ${db_names[$i]}"
+    done
+
     return 0
 }
-
 # Database and Table existence checks
 check_db_exists() {
     echo "Checking database: $DB_NAME" # Debugging
