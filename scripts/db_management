@@ -11,7 +11,7 @@ create_database() {
     echo -e "\nCreate Database"
     echo "============================================== "
     
-    read -p "Enter Database Name: " db_name
+    IFS= read -r -p "Enter Database Name: " db_name
     
     # Validate database name
     check_db_name "$db_name" || return 1
@@ -130,16 +130,33 @@ rename_database() {
     # Get old database name from choice
     local old_name=$(ls -l "$DBS_PATH" | grep "^d" | awk '{print $9}' | sed -n "${choice}p")
     
-    # Get new name    echo "=================="
+    # Get new name
+    while true; do
+        read -r -p "Enter new database name: " new_name
+
+        # Validate new database name
+        echo "this is the new db name : " $new_name 
+        check_db_name "$new_name" || return 1
+
+        
+        # Check if new name already exists
+        if [[ -d "$DBS_PATH/$new_name" ]]; then
+            echo "Error: Database '$new_name' already exists"
+            continue
+        fi
+        
+        break
+    done
 
     # Rename database
     if mv "$DBS_PATH/$old_name" "$DBS_PATH/$new_name" 2>/dev/null; then
         echo "Database renamed successfully"
         echo "'$old_name' → '$new_name'"
         
-        # Update global variable if it was the current database
+        # Update global variables if it was the current database
         if [[ "$DB_NAME" == "$old_name" ]]; then
             export DB_NAME="$new_name"
+            export ACTIVE_DB_PATH="$DBS_PATH/$new_name"
         fi
     else
         echo "Error: Failed to rename database"
@@ -157,7 +174,7 @@ connect_database() {
     fi
     
     # Get database selection
-    read -p $'\nEnter database number to connect (or 0 to cancel): ' choice
+    IFS= read -r -p $'\nEnter database number to connect (or 0 to cancel): ' choice
     
     # Check if user wants to cancel
     if [ "$choice" -eq 0 ]; then
