@@ -1,9 +1,6 @@
 #! /usr/bin/bash
 
-
-pwd
 source "./scripts/table_management/table_management.sh"
-
 
 table_menu(){
 echo "Connected To Database: $DB_NAME"
