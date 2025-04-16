@@ -116,7 +116,7 @@ done
 echo -e "\nSelected Records: "
 
 # Read and process the table data
-while IFS=: read -r -a row 
+while IFS=: read -r -a row || [ -n "$row" ]
 do
 	if [[ "$apply_filter" =~ ^[Yy](es)?$ ]] 
         then
