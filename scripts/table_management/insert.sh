@@ -17,7 +17,7 @@ insert_into_table() {
             selected_table=${table_names[$choice]}
             break
         fi
-        if [ "$choice" -eq 0 ]; then
+        if validate_number "$choice" 0 0; then
             echo "Operation cancelled"
             return 0
         fi

@@ -13,7 +13,7 @@ connect_database() {
     IFS= read -r -p $'\nEnter database number to connect (or 0 to cancel): ' choice
     
     # Check if user wants to cancel
-    if [ "$choice" -eq 0 ]; then
+    if validate_number "$choice" 0 0; then
         echo "Operation cancelled"
         return 0
     fi

@@ -10,8 +10,6 @@ list_tables() {
     # Display tables
     local table_count=0
     echo "CHECK:$ACTIVE_DB_PATH"
-    pwd
-
     for table in "$ACTIVE_DB_PATH"/* ; do
         if [ -d "$table" ] && [ -f "$table/metadata" ]; then
             ((table_count++))

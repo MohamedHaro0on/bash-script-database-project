@@ -11,7 +11,7 @@ delete_from_table () {
 
         # Get table selection
         while true; do
-            IFS= read -r -p $'\nSelect table number to delete from (or -1 to cancel): ' choice
+            IFS= read -r -p $'\nSelect table number to delete from (or 0 to cancel): ' choice
 
             if validate_number "$choice" 0 ${#table_names[@]}; then
                 if [ "$choice" -eq 0 ]; then
@@ -30,11 +30,12 @@ delete_from_table () {
         while true; do
             IFS= read -r -p $'\nSelect column number: ' col_choice
 
-            if validate_number "$col_choice" 0 $((${#cols[@]} 0)); then
+            if validate_number "$col_choice" 1 ${#cols[@]}; then
+                col_choice=$((col_choice - 1))
                 selected_column=${cols[$col_choice]}
                 break
             fi
-            if [ "$col_choice" -eq -1 ]; then
+            if validate_number "$choice" 0 0 ; then
                 echo "Operation cancelled"
                 return 0
             fi
@@ -58,16 +59,18 @@ delete_from_table () {
         done < "$data_file"
 
         if [ ${#matched_records[@]} -eq 0 ]; then
+            echo "============================"
             echo "No matching records found."
+            echo "============================"
             continue
         fi
 
         # Allow user to select which record to delete
         while true; do
-            IFS= read -r -p "Select record number to delete (or -1 to cancel): " record_choice
+            IFS= read -r -p "Select record number to delete (or 0 to cancel): " record_choice
 
-            if validate_number "$record_choice" -1 ${#matched_records[@]}; then
-                if [ "$record_choice" -eq -1 ]; then
+            if validate_number "$record_choice" 0 ${#matched_records[@]}; then
+                if [ "$choice" -eq 0 ]; then
                     echo "Operation cancelled"
                     return 0
                 fi
@@ -92,8 +95,9 @@ delete_from_table () {
         done
 
         mv "$temp_file" "$data_file"
-
+        echo "============================"
         echo "Record deleted successfully!"
+        echo "============================"
 
         # Ask if the user wants to perform another deletion
         IFS= read -r -p "Do you want to delete another record? (y/n): " continue_choice

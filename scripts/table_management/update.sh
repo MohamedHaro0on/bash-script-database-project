@@ -34,7 +34,7 @@ done
 while true
 do
 	IFS= read -r -p $'\n Select Table Number To Update(or 0 To Cancel) : ' choice
-	if [[ $choice -eq 0 ]] 
+	if validate_number "$choice" 0 0; 
 	then
 		echo "Operation Cancelled"
 		return 0
@@ -74,7 +74,7 @@ done
 while true
 do
 	IFS= read -r -p $'\n Select Column Number To Update(or 0 To Cancel) : ' choice
-	if [[ $choice -eq 0 ]] 
+	if validate_number "$choice" 0 0; 
 	then
 		echo "Operation Cancelled"
 		return 0

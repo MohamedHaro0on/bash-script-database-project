@@ -21,11 +21,11 @@ echo "Connected To Database: $DB_NAME"
         # Read user input with validation
         while true; do
             read -p "Select an Option (1-9): " option
-            # Validate if input is a number between 1 and 9
+            # Validate if input is a number between 1 and 10
             if validate_number "$option" 1 10; then
                 break
             else
-                echo "Please enter a valid number between 1 and 9"
+                echo "Please enter a valid number between 1 and 10"
             fi
         done
                         

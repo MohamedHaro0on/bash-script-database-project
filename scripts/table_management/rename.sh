@@ -15,7 +15,7 @@ rename_table() {
         if validate_number "$choice" 1 ${#table_names[@]}; then
             selected_table=${table_names[$choice]}
             break
-        elif validate_number "$choice" 0 ${#table_names[@]} && [[ "$choice" -eq 0 ]]; then            
+        elif validate_number "$choice" 0 0 && [[ "$choice" -eq 0 ]]; then            
             echo "Operation cancelled"
             return 0
         else

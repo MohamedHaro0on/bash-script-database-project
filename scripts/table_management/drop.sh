@@ -16,7 +16,7 @@ drop_table() {
             then
                 selected_table=${table_names[$choice]}
                 break
-            elif validate_number "$choice" 0 ${#table_names[@]} && [[ "$choice" -eq 0 ]]; 
+            elif validate_number "$choice" 0 0 && [[ "$choice" -eq 0 ]]; 
             then
                 echo "Operation cancelled"
                 return 0

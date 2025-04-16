@@ -18,7 +18,7 @@ rename_database() {
         then
             selected_database="${db_names[$((choice - 1))]}"
             break
-        elif validate_number "$choice" 0 ${#db_names[@]} && [[ "$choice" -eq 0 ]]; 
+        elif validate_number "$choice" 0 0 && [[ "$choice" -eq 0 ]]; 
         then
             echo "Operation cancelled"
             return 0
