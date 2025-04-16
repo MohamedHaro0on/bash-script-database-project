@@ -13,16 +13,13 @@ delete_from_table () {
         while true; do
             IFS= read -r -p $'\nSelect table number to delete from (or 0 to cancel): ' choice
 
-            if validate_number "$choice" 1 ${#table_names[@]}; 
-            then
+            if validate_number "$choice" 0 ${#table_names[@]}; then
+                if [ "$choice" -eq 0 ]; then
+                    echo "Operation cancelled"
+                    return 0
+                fi
                 selected_table=${table_names[$choice]}
                 break
-            elif validate_number "$choice" 0 0 && [[ "$choice" -eq 0 ]];
-            then 
-                echo "Operation cancelled"
-                return 0
-            else
-                echo "Invalid choice. Please select a number between 1 and #table_names[@], or 0 to cancel."
             fi
         done
 
@@ -72,15 +69,12 @@ delete_from_table () {
         while true; do
             IFS= read -r -p "Select record number to delete (or 0 to cancel): " record_choice
 
-            if validate_number "$record_choice" 0 ${#matched_records[@]}; 
-            then
-                if validate_number "$record_choice" 0 0 && [ "$record_choice" -eq 0 ]; 
-                then
+            if validate_number "$record_choice" 0 ${#matched_records[@]}; then
+                if [ "$choice" -eq 0 ]; then
                     echo "Operation cancelled"
                     return 0
-                else
-                    echo "Invalid choice. Please select a number between 1 and ${#matched_records[@]}, or 0 to cancel."
                 fi
+                break
             fi
         done
 
