@@ -194,7 +194,7 @@ validate_table_name() {
     fi
     # Check for backslash 
     if [[ "$name" == *\\* ]]; then
-        echo "Error: Database name cannot contain backslashes"
+        echo "Error: Table name cannot contain backslashes"
         return 1
     fi
     if [[ ! "$name" =~ ${REGEX_PATTERNS["TABLE_NAME_REGEX"]} ]]; then
@@ -212,7 +212,7 @@ validate_column_name() {
     fi
     # Check for backslash 
     if [[ "$name" == *\\* ]]; then
-        echo "Error: Database name cannot contain backslashes"
+        echo "Error: Column name cannot contain backslashes"
         return 1
     fi
     if [[ ! "$name" =~ ${REGEX_PATTERNS["COLUMN_NAME_REGEX"]} ]]; then

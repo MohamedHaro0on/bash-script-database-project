@@ -11,16 +11,18 @@ drop_table() {
     # Get table selection
     while true; do
         IFS= read -r -p $'\nEnter table number to drop (or 0 to cancel): ' choice
-        
-        if [ "$choice" -eq 0 ]; then
-            echo "Operation cancelled"
-            return 0
-        fi
-        
-        if validate_number "$choice" 1 ${#table_names[@]}; then
-            selected_table=${table_names[$choice]}
-            break
-        fi
+
+            if validate_number "$choice" 1 ${#table_names[@]}; 
+            then
+                selected_table=${table_names[$choice]}
+                break
+            elif validate_number "$choice" 0 ${#table_names[@]} && [[ "$choice" -eq 0 ]]; 
+            then
+                echo "Operation cancelled"
+                return 0
+            else
+                echo "Invalid choice. Please select a number between 1 and ${#table_names[@]}, or 0 to cancel."
+            fi
     done
     
     # Confirm and execute
