@@ -67,15 +67,19 @@ delete_from_table () {
 
         # Allow user to select which record to delete
         while true; do
-            IFS= read -r -p "Select record number to delete (or 0 to cancel): " record_choice
+            read -p "Select record number to delete (or 0 to cancel): " record_choice
 
-            if validate_number "$record_choice" 0 ${#matched_records[@]}; then
-                if [ "$choice" -eq 0 ]; then
-                    echo "Operation cancelled"
-                    return 0
-                fi
+            # أول شرط: رقم داخل الرينج الصح
+            if validate_number "$record_choice" 1 ${#matched_records[@]}; then
                 break
             fi
+
+            if validate_number "$record_choice" 0 0 && [ "$record_choice" -eq 0 ]; then
+                echo "Operation cancelled"
+                return 0
+            fi
+
+            echo "Invalid choice, please try again."
         done
 
         # Rewrite the data file excluding the selected matching record
