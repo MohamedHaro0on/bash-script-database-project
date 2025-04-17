@@ -28,8 +28,7 @@ To run this project, you need to have the following installed on your system:
 
 To start using the database management system, run the main script:
 
-```sudo./main.sh
-
+```sudo ./main.sh
 ```
 
 ## Project Structure
