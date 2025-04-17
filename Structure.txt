@@ -1,22 +1,39 @@
 📁 BashDBMS/
 │── 📁 databases/         # All databases (each database is a directory)
 │── 📁 scripts/           # All shell scripts (modular approach)
-│   │── 📜 main.sh        # Main script to run the DBMS menu
-│   │── 📜 db_manager.sh  # Handles database operations (create, list, connect, drop)
-│   │── 📜 table_manager.sh # Handles table operations (create, list, drop)
-│   │── 📜 insert.sh      # Handles inserting data into tables
-│   │── 📜 select.sh      # Handles selecting data from tables
-│   │── 📜 update.sh      # Handles updating records in tables
-│   │── 📜 delete.sh      # Handles deleting records from tables
-│── 📁 logs/              # Store error or action logs (optional)
+│   │── 📁 db_management/ # Handles database operations
+│   │   │── 📜 connect.sh
+│   │   │── 📜 create.sh
+│   │   │── 📜 db_management.sh
+│   │   │── 📜 drop.sh
+│   │   │── 📜 list.sh
+│   │   │── 📜 rename.sh
+│   │── 📁 table_management/ # Handles table operations
+│   │   │── 📜 create.sh
+│   │   │── 📜 delete.sh
+│   │   │── 📜 drop.sh
+│   │   │── 📜 insert.sh
+│   │   │── 📜 list.sh
+│   │   │── 📜 rename.sh
+│   │   │── 📜 select.sh
+│   │   │── 📜 table_management.sh
+│   │   │── 📜 table_menu.sh
+│   │   │── 📜 update.sh
+│── 📁 configs/           # Configuration files
+│   │── 📜 config.sh
+│── 📁 utils/             # Utility scripts (if any)
+│── 📜 main.sh            # Main script to run the DBMS menu
 │── 📜 README.md          # Documentation and usage instructions
-----------------------------------------------------------------------------------------
+│── 📜 .gitignore         # Git ignore file
+│── 📜 Structure.txt      # Project structure documentation-------------------------------------------------------------------------------
+
+
 databases/
 ├── my_database/
-    ├── users.tbl   # Table data (each table is a file)
-    ├── users.meta  # Table schema (columns, types, primary key)
+    ├── data   # Table data (each table is a file)
+    ├── metadata  # Table schema (columns, types, primary key)
 
-Example users.meta file:
+Example metadata file:
 ------------------------
 id:int:PK
 name:string
