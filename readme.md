@@ -34,41 +34,7 @@ To start using the database management system, run the main script:
 
 ## Project Structure
 
-📁 BashDBMS/
-│── 📁 databases/ # All databases (each database is a directory)
-│── 📁 scripts/ # All shell scripts (modular approach)
-│ │── 📁 db_management/ # Handles database operations
-│ │ │── connect.sh
-│ │ │── create.sh
-│ │ │── db_management.sh
-│ │ │── drop.sh
-│ │ │── list.sh
-│ │ │── rename.sh
-│ │── 📁 table_management/ # Handles table operations
-│ │ │── create.sh
-│ │ │── delete.sh
-│ │ │── drop.sh
-│ │ │── insert.sh
-│ │ │── list.sh
-│ │ │── rename.sh
-│ │ │── select.sh
-│ │ │── table_management.sh
-│ │ │── table_menu.sh
-│ │ │── update.sh
-│── 📁 configs/ # Configuration files
-│ │── config.sh
-│── 📁 utils/ # Utility scripts (if any)
-│── main.sh # Main script to run the DBMS menu
-│── README.md # Documentation and usage instructions
-│── .gitignore # Git ignore file
-│── Structure.txt # Project structure documentation
-
-## Database Structure
-
-databases/
-├── my_database/
-├── data/ # Table data (each table is a file)
-├── metadata/ # Table schema (columns, types, primary key)## Database Structure
+![Project Structure](project-structure.png)
 
 ## Metadata File
 
