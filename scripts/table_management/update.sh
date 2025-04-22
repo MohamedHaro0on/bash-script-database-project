@@ -139,7 +139,7 @@ IFS= read -r -p "Enter value to search for: " search_value
 echo -e "\nSelected Record: $old_record"
 IFS=":" read -ra values <<< "$old_record"
 
-IFS=":" read -r col_name col_type <<< "${COLUMNS[column_index]}"
+IFS=":" read -r col_name col_type col_constraint <<< "${COLUMNS[column_index]}"
 IFS= read -r -p "Enter new value for $col_name ($col_type) (leave empty to keep current): " new_value
 
 if [[ -z "$new_value" ]] 
@@ -155,6 +155,16 @@ then
     return 1
 fi
 
+# Check for primary key constraint violation
+if [[ "$col_constraint" == "PK" ]]; then
+    while IFS= read -r line; do
+        IFS=":" read -ra check_values <<< "$line"
+        if [[ "${check_values[column_index]}" == "$new_value" ]]; then
+            echo "Error: Duplicate primary key value '$new_value' already exists!"
+            return 1
+        fi
+    done < "$data_file"
+fi
 # Update only the selected column
 values[column_index]="$new_value"
 
